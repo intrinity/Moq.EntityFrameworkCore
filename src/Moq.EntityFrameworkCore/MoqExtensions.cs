@@ -12,7 +12,7 @@
     {
         public static IReturnsResult<T> ReturnsDbSet<T, TEntity>(this ISetup<T, DbSet<TEntity>> setupResult, IEnumerable<TEntity> entities, Mock<DbSet<TEntity>> dbSetMock = null) where T : DbContext where TEntity : class
         {
-            dbSetMock = dbSetMock ?? new Mock<DbSet<TEntity>>();
+            dbSetMock ??= new Mock<DbSet<TEntity>>();
 
             ConfigureMock(dbSetMock, entities);
 
@@ -22,7 +22,7 @@
         [Obsolete("Use ReturnsDbSet<T, TEntity> instead")]
         public static IReturnsResult<T> ReturnsDbQuery<T, TEntity>(this ISetup<T, DbQuery<TEntity>> setupResult, IEnumerable<TEntity> entities, Mock<DbQuery<TEntity>> dbQueryMock = null) where T : DbContext where TEntity : class
         {
-            dbQueryMock = dbQueryMock ?? new Mock<DbQuery<TEntity>>();
+            dbQueryMock ??= new Mock<DbQuery<TEntity>>();
 
             ConfigureMock(dbQueryMock, entities);
 
@@ -30,15 +30,15 @@
         }
 
         /// <summary>
-        /// Configures a Mock for a <see cref="DbSet{TEntity}"/> or a <see cref="DbQuery{TQuery}"/> so that it can be queriable via LINQ
+        /// Configures a Mock for a <see cref="DbSet{TEntity}"/> or a <see cref="DbQuery{TQuery}"/> so that it can be queryable via LINQ
         /// </summary>
         private static void ConfigureMock<TEntity>(Mock dbSetMock, IEnumerable<TEntity> entities) where TEntity : class
         {
             var entitiesAsQueryable = entities.AsQueryable();
 
             dbSetMock.As<IAsyncEnumerable<TEntity>>()
-               .Setup(m => m.GetAsyncEnumerator(CancellationToken.None))
-               .Returns(new InMemoryDbAsyncEnumerator<TEntity>(entitiesAsQueryable.GetEnumerator()));
+                .Setup(m => m.GetAsyncEnumerator(CancellationToken.None))
+                .Returns(() => new InMemoryDbAsyncEnumerator<TEntity>(entitiesAsQueryable.GetEnumerator()));
 
             dbSetMock.As<IQueryable<TEntity>>()
                 .Setup(m => m.Provider)
